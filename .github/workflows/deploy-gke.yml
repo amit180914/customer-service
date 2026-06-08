@@ -1,0 +1,66 @@
+name: Deploy Java App to GKE
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  K8S_NAMESPACE: amit
+  GAR_REPOSITORY: java-services
+  GAR_LOCATION: us-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        run: |
+          IMAGE="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/java-app:${{ github.sha }}"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials "${{ secrets.GKE_CLUSTER_NAME }}" \
+            --region "${{ env.GAR_LOCATION }}" \
+            --project "${{ secrets.GCP_PROJECT_ID }}"
+
+      - name: Render manifests
+        run: |
+          sed "s|__IMAGE__|${IMAGE}|g" k8s/deployment.yml > k8s/deployment.rendered.yaml
+          sed "s|__GCP_APP_SA_EMAIL__|${{ secrets.GCP_APP_SA_EMAIL }}|g" k8s/serviceaccount.yml > k8s/serviceaccount.rendered.yaml
+
+      - name: Deploy
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/serviceaccount.rendered.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/deployment.rendered.yaml
+          kubectl rollout status deployment/java-app -n "${{ env.K8S_NAMESPACE }}" --timeout=300s
+
+      - name: Service endpoint
+        run: kubectl get svc java-app -n "${{ env.K8S_NAMESPACE }}"
+

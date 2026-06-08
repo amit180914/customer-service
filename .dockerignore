@@ -1,0 +1,12 @@
+target/
+.git/
+.idea/
+*.iml
+*.log
+app.log
+app.err
+app8081.log
+app8081.err
+README.md
+HELP.md
+
