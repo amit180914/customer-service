@@ -23,11 +23,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate auth inputs
+        env:
+          WIF_PROVIDER: ${{ secrets.WIF_PROVIDER != '' && secrets.WIF_PROVIDER || vars.WIF_PROVIDER }}
+          WIF_SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT != '' && secrets.WIF_SERVICE_ACCOUNT || vars.WIF_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$WIF_PROVIDER" ]; then
+            echo "::error::Missing WIF provider. Set WIF_PROVIDER as a repository secret or variable."
+            exit 1
+          fi
+          if [ -z "$WIF_SERVICE_ACCOUNT" ]; then
+            echo "::error::Missing WIF service account. Set WIF_SERVICE_ACCOUNT as a repository secret or variable."
+            exit 1
+          fi
+
       - name: Auth to GCP
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER != '' && secrets.WIF_PROVIDER || vars.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT != '' && secrets.WIF_SERVICE_ACCOUNT || vars.WIF_SERVICE_ACCOUNT }}
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
