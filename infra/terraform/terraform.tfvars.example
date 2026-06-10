@@ -1,0 +1,13 @@
+project_id                    = "learning-amit"
+region                        = "us-central1"
+gke_cluster_name              = "java-app-gke"
+gke_node_count                = 1
+gke_machine_type              = "e2-standard-2"
+gar_repository                = "java-services"
+k8s_namespace                 = "amit"
+github_repository             = "amit180914/customer-service"
+workload_identity_pool_id     = "github-pool"
+workload_identity_provider_id = "github-provider"
+github_service_account_id     = "github-terraform"
+gke_app_service_account_id    = "gke-app-sa"
+

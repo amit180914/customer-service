@@ -127,7 +127,28 @@ gcloud auth configure-docker asia-south1-docker.pkg.dev
 
 ## GitHub Actions Deploy to GKE
 
-Workflow file: `.github/workflows/deploy-gke.yml`
+Workflow files:
+
+- `.github/workflows/infra-terraform.yml` (plan/apply/destroy infra)
+- `.github/workflows/deploy-gke.yml` (deploy app to existing infra)
+
+### Infra Workflow (Create/Destroy on Demand)
+
+Use `Infra Terraform` workflow with manual input:
+
+- `plan` - check changes
+- `apply` - create/update infra
+- `destroy` - delete infra
+
+Required for infra workflow:
+
+- `GCP_PROJECT_ID` (secret or variable)
+- `TF_STATE_BUCKET` (secret or variable; existing GCS bucket for Terraform state)
+- Auth via either:
+  - `GCP_BOOTSTRAP_CREDENTIALS` (secret, JSON key), or
+  - `WIF_PROVIDER` + `WIF_SERVICE_ACCOUNT` (secret or variable)
+
+After successful `apply`, copy Terraform outputs to app deploy secrets/variables.
 
 ### Required GitHub Secrets
 
@@ -138,6 +159,8 @@ Add these in your repository at `Settings -> Secrets and variables -> Actions`:
 - `GCP_PROJECT_ID` - GCP project id
 - `GKE_CLUSTER_NAME` - target GKE cluster name
 - `GCP_APP_SA_EMAIL` - GCP service account email bound to K8s `app-sa`
+
+You can store non-sensitive values as GitHub repository/environment variables instead of secrets.
 
 ### What the Workflow Does
 
