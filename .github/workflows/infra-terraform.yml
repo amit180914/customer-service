@@ -34,7 +34,7 @@ jobs:
       TF_VAR_gar_repository: ${{ vars.GAR_REPOSITORY != '' && vars.GAR_REPOSITORY || 'java-services' }}
       TF_VAR_k8s_namespace: ${{ vars.K8S_NAMESPACE != '' && vars.K8S_NAMESPACE || 'amit' }}
       TF_VAR_github_repository: ${{ github.repository }}
-      TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET != '' && secrets.TF_STATE_BUCKET || vars.TF_STATE_BUCKET }}
+      TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET != '' && secrets.TF_STATE_BUCKET || vars.TF_STATE_BUCKET || 'learning-amit-terraform-state' }}
       TF_STATE_PREFIX: ${{ vars.TF_STATE_PREFIX != '' && vars.TF_STATE_PREFIX || 'customer-service' }}
 
     steps:
