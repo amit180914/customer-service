@@ -27,6 +27,7 @@ jobs:
         working-directory: infra/terraform
     env:
       TF_IN_AUTOMATION: true
+      BOOTSTRAP_CREDENTIALS: ${{ secrets.GCP_BOOTSTRAP_CREDENTIALS }}
       TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID != '' && secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID }}
       TF_VAR_region: ${{ vars.GAR_LOCATION != '' && vars.GAR_LOCATION || 'us-central1' }}
       TF_VAR_gke_cluster_name: ${{ secrets.GKE_CLUSTER_NAME != '' && secrets.GKE_CLUSTER_NAME || vars.GKE_CLUSTER_NAME || 'java-app-gke' }}
@@ -42,7 +43,6 @@ jobs:
 
       - name: Validate required inputs
         env:
-          BOOTSTRAP_CREDENTIALS: ${{ secrets.GCP_BOOTSTRAP_CREDENTIALS }}
           WIF_PROVIDER: ${{ secrets.WIF_PROVIDER != '' && secrets.WIF_PROVIDER || vars.WIF_PROVIDER }}
           WIF_SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT != '' && secrets.WIF_SERVICE_ACCOUNT || vars.WIF_SERVICE_ACCOUNT }}
         run: |
@@ -60,13 +60,13 @@ jobs:
           fi
 
       - name: Authenticate with bootstrap credentials
-        if: ${{ secrets.GCP_BOOTSTRAP_CREDENTIALS != '' }}
+        if: ${{ env.BOOTSTRAP_CREDENTIALS != '' }}
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_BOOTSTRAP_CREDENTIALS }}
+          credentials_json: ${{ env.BOOTSTRAP_CREDENTIALS }}
 
       - name: Authenticate with WIF
-        if: ${{ secrets.GCP_BOOTSTRAP_CREDENTIALS == '' }}
+        if: ${{ env.BOOTSTRAP_CREDENTIALS == '' }}
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER != '' && secrets.WIF_PROVIDER || vars.WIF_PROVIDER }}
